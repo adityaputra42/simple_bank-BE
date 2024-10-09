@@ -9,8 +9,8 @@ import (
 )
 
 type AccountRepository interface {
-	Create(account domain.Account) domain.Account
-	Update(account domain.Account) domain.Account
+	Create(account domain.Account, tx *gorm.DB) (domain.Account, error)
+	Update(account domain.Account, tx *gorm.DB) (domain.Account, error)
 	Delete(account domain.Account)
 	FindById(accountId int) (domain.Account, error)
 	FindAllbyUserId(UserId int) []domain.Account
@@ -22,10 +22,10 @@ type AccountRepositoryImpl struct {
 }
 
 // Create implements AccountReposiotry.
-func (a *AccountRepositoryImpl) Create(account domain.Account) domain.Account {
-	result := a.db.Create(&account)
+func (a *AccountRepositoryImpl) Create(account domain.Account, tx *gorm.DB) (domain.Account, error) {
+	result := tx.Create(&account)
 	helper.PanicIfError(result.Error)
-	return account
+	return account, result.Error
 }
 
 // Delete implements AccountReposiotry.
@@ -59,10 +59,10 @@ func (a *AccountRepositoryImpl) FindById(accountId int) (domain.Account, error) 
 }
 
 // Update implements AccountReposiotry.
-func (a *AccountRepositoryImpl) Update(account domain.Account) domain.Account {
-	result := a.db.Save(&account)
+func (a *AccountRepositoryImpl) Update(account domain.Account, tx *gorm.DB) (domain.Account, error) {
+	result := tx.Save(&account)
 	helper.PanicIfError(result.Error)
-	return account
+	return account, result.Error
 }
 
 func NewAccountRepository() AccountRepository {

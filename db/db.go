@@ -20,7 +20,6 @@ func InitDB(DbSource string) {
 	fmt.Println("Connected database")
 }
 
-
 func GetConnection() *gorm.DB {
 	return db
 }

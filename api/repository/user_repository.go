@@ -9,8 +9,8 @@ import (
 )
 
 type UserRepository interface {
-	Create(user domain.User, tx *gorm.DB) domain.User
-	UpdatePassword(user domain.User, tx *gorm.DB) domain.User
+	Create(user domain.User, tx *gorm.DB) (domain.User, error)
+	UpdatePassword(user domain.User) (domain.User, error)
 	Delete(user domain.User)
 	FindById(UserId int) (domain.User, error)
 	FindByUsername(Username string) (domain.User, error)
@@ -21,7 +21,7 @@ type UserRepositoryImpl struct {
 }
 
 // Create implements UserRepository.
-func (u *UserRepositoryImpl) Create(user domain.User, tx *gorm.DB) domain.User {
+func (u *UserRepositoryImpl) Create(user domain.User, tx *gorm.DB) (domain.User, error) {
 	hash, err := helper.HashPassword(user.Password)
 	helper.PanicIfError(err)
 	newUser := domain.User{
@@ -33,7 +33,7 @@ func (u *UserRepositoryImpl) Create(user domain.User, tx *gorm.DB) domain.User {
 	result := tx.Create(&newUser)
 	helper.PanicIfError(result.Error)
 
-	return newUser
+	return newUser, result.Error
 }
 
 // Delete implements UserRepository.
@@ -45,7 +45,7 @@ func (u *UserRepositoryImpl) Delete(user domain.User) {
 // FindById implements UserRepository.
 func (u *UserRepositoryImpl) FindById(UserId int) (domain.User, error) {
 	user := domain.User{}
-	err := u.db.Model(&domain.User{}).Take(&user, "id =?", UserId).Error
+	err := u.db.Model(&domain.User{}).Preload("Accounts").Take(&user, "id =?", UserId).Error
 	helper.PanicIfError(err)
 	return user, err
 }
@@ -53,13 +53,13 @@ func (u *UserRepositoryImpl) FindById(UserId int) (domain.User, error) {
 // FindByUsername implements UserRepository.
 func (u *UserRepositoryImpl) FindByUsername(Username string) (domain.User, error) {
 	user := domain.User{}
-	err := u.db.Model(&domain.User{}).Take(&user, "username =?", Username).Error
+	err := u.db.Model(&domain.User{}).Preload("Accounts").Take(&user, "username =?", Username).Error
 	helper.PanicIfError(err)
 	return user, err
 }
 
 // UpdatePassword implements UserRepository.
-func (u *UserRepositoryImpl) UpdatePassword(user domain.User, tx *gorm.DB) domain.User {
+func (u *UserRepositoryImpl) UpdatePassword(user domain.User) (domain.User, error) {
 	hash, err := helper.HashPassword(user.Password)
 	helper.PanicIfError(err)
 	newUser := domain.User{
@@ -68,9 +68,9 @@ func (u *UserRepositoryImpl) UpdatePassword(user domain.User, tx *gorm.DB) domai
 		FullName: user.FullName,
 		Password: hash,
 	}
-	result := tx.Save(&newUser)
+	result := u.db.Save(&newUser)
 	helper.PanicIfError(result.Error)
-	return newUser
+	return newUser, result.Error
 
 }
 
