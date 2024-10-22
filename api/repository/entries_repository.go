@@ -9,7 +9,7 @@ import (
 )
 
 type EntriesRepository interface {
-	Create(entity domain.Entries) domain.Entries
+	Create(entity domain.Entries, tx *gorm.DB) (domain.Entries, error)
 	FindById(entityId int) (domain.Entries, error)
 	FindAll() []domain.Entries
 }
@@ -19,10 +19,10 @@ type EntriesRepositoryImpl struct {
 }
 
 // Create implements EntriesRepository.
-func (e *EntriesRepositoryImpl) Create(entity domain.Entries) domain.Entries {
-	result := e.db.Create(&entity)
+func (e *EntriesRepositoryImpl) Create(entity domain.Entries, tx *gorm.DB) (domain.Entries, error) {
+	result := tx.Create(&entity)
 	helper.PanicIfError(result.Error)
-	return entity
+	return entity, result.Error
 }
 
 // FindAll implements EntriesRepository.

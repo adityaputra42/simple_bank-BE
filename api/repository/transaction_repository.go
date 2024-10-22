@@ -9,8 +9,8 @@ import (
 )
 
 type TransactionRepository interface {
-	Create(transaction domain.Transaction) domain.Transaction
-	FindById(transactionId int) (domain.Transaction, error)
+	Create(transaction domain.Transaction, tx *gorm.DB) (domain.Transaction, error)
+	FindById(transactionId string) (domain.Transaction, error)
 	FindAllbyUserId(userId int) []domain.Transaction
 	FindAll() []domain.Transaction
 }
@@ -20,16 +20,16 @@ type TransactionRepositoryImpl struct {
 }
 
 // Create implements TransactionRepository.
-func (t *TransactionRepositoryImpl) Create(transaction domain.Transaction) domain.Transaction {
-	result := t.db.Create(&transaction)
+func (t *TransactionRepositoryImpl) Create(transaction domain.Transaction, tx *gorm.DB) (domain.Transaction, error) {
+	result := tx.Create(&transaction)
 	helper.PanicIfError(result.Error)
-	return transaction
+	return transaction, result.Error
 }
 
 // FindAll implements TransactionRepository.
 func (t *TransactionRepositoryImpl) FindAll() []domain.Transaction {
 	transactions := []domain.Transaction{}
-	result := t.db.Find(&transactions)
+	result := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Find(&transactions)
 	helper.PanicIfError(result.Error)
 	return transactions
 }
@@ -37,15 +37,15 @@ func (t *TransactionRepositoryImpl) FindAll() []domain.Transaction {
 // FindAllbyUserId implements TransactionRepository.
 func (t *TransactionRepositoryImpl) FindAllbyUserId(userId int) []domain.Transaction {
 	transactions := []domain.Transaction{}
-	result := t.db.Find(&transactions, "user_id = ?", userId)
+	result := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Find(&transactions, "user_id = ?", userId)
 	helper.PanicIfError(result.Error)
 	return transactions
 }
 
 // FindById implements TransactionRepository.
-func (t *TransactionRepositoryImpl) FindById(transactionId int) (domain.Transaction, error) {
+func (t *TransactionRepositoryImpl) FindById(transactionId string) (domain.Transaction, error) {
 	transaction := domain.Transaction{}
-	err := t.db.Model(&domain.Account{}).Take(&transaction, "id =?", transactionId).Error
+	err := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Take(&transaction, "id =?", transactionId).Error
 	helper.PanicIfError(err)
 	return transaction, err
 }

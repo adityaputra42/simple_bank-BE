@@ -1,8 +1,11 @@
 package service
 
 import (
+	"errors"
 	"simple_bank_solid/api/repository"
 	"simple_bank_solid/db"
+	"simple_bank_solid/helper"
+	"simple_bank_solid/model/domain"
 	"simple_bank_solid/model/web/request"
 	"simple_bank_solid/model/web/response"
 
@@ -24,17 +27,65 @@ type DepositServieImpl struct {
 
 // CreateDeposit implements DepositServie.
 func (d *DepositServieImpl) CreateDeposit(req request.DepositRequest) (response.DepositResponse, error) {
-	panic("unimplemented")
+	var response response.DepositResponse
+	err := d.db.Transaction(func(tx *gorm.DB) error {
+		account, valid := helper.ValidAccount(tx, req.AccountId, req.Currency)
+
+		if valid != true {
+			return errors.New("Account not valid")
+		}
+
+		depositReq := domain.Deposit{
+			Amount: req.Amount, Currency: req.Currency, AccountId: req.AccountId,
+		}
+		deposit, err := d.depositRepo.Create(depositReq, tx)
+		if err != nil {
+			return err
+		}
+		entryReq := domain.Entries{
+			AccountId: req.AccountId,
+			Amount:    req.Amount,
+		}
+		_, err = d.entriesRepo.Create(entryReq, tx)
+
+		if err != nil {
+			return err
+		}
+
+		account.Balance += req.Amount
+		newAccount, err := d.accountRepo.Update(account, tx)
+		if err != nil {
+			return err
+		}
+		response = helper.ToDepositRespone(deposit, newAccount)
+
+		return nil
+
+	})
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }
 
 // FetchAllDeposit implements DepositServie.
 func (d *DepositServieImpl) FetchAllDeposit() []response.DepositResponse {
-	panic("unimplemented")
+	var listDeposit []response.DepositResponse
+	deposits := d.depositRepo.FindAll()
+	for _, v := range deposits {
+		listDeposit = append(listDeposit, helper.ToDepositRespone(v, v.Account))
+	}
+	return listDeposit
 }
 
 // FetchDepositById implements DepositServie.
 func (d *DepositServieImpl) FetchDepositById(DepositId int64) (response.DepositResponse, error) {
-	panic("unimplemented")
+	deposit, err := d.depositRepo.FindById(int(DepositId))
+	if err != nil {
+		return helper.ToDepositRespone(deposit, deposit.Account), err
+	}
+	return helper.ToDepositRespone(deposit, deposit.Account), nil
+
 }
 
 func NewDepositService(
