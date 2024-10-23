@@ -15,7 +15,7 @@ import (
 
 type UserService interface {
 	Create(req request.CreateUser) (response.UserResponse, error)
-	Login(req request.LoginUser) (bool, error)
+	Login(req request.LoginUser) (bool, response.UserResponse, error)
 	UpdatePassword(req request.UpdateUser, username string) (response.UserResponse, error)
 	Delete(userId int) error
 	FecthUser(username string) (response.UserResponse, error)
@@ -92,22 +92,22 @@ func (u *UserServiceImpl) FecthUser(username string) (response.UserResponse, err
 }
 
 // Login implements UserService.
-func (u *UserServiceImpl) Login(req request.LoginUser) (bool, error) {
+func (u *UserServiceImpl) Login(req request.LoginUser) (bool, response.UserResponse, error) {
+
 	user, err := u.userRepo.FindByUsername(req.Username)
 	if err == sql.ErrNoRows {
 		fmt.Println("User not found")
-		return false, err
+		return false, helper.ToUserResponse(user), fmt.Errorf("User not found")
 	}
 	if err != nil {
-		fmt.Println("Query error")
-		return false, err
+		return false, helper.ToUserResponse(user), fmt.Errorf("Query error")
 	}
 	match, err := helper.CheckPasswordHash(req.Password, user.Password)
 	if !match {
-		fmt.Println("hash and password doesn't match")
-		return false, err
+
+		return false, helper.ToUserResponse(user), fmt.Errorf("hash and password doesn't match")
 	}
-	return true, nil
+	return true, helper.ToUserResponse(user), nil
 }
 
 // UpdatePassword implements UserService.

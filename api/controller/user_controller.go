@@ -4,6 +4,7 @@ import (
 	"simple_bank_solid/api/service"
 	"simple_bank_solid/model/web"
 	"simple_bank_solid/model/web/request"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -47,7 +48,26 @@ func (u *UserControllerImpl) Create(c *fiber.Ctx) error {
 
 // Delete implements UserController.
 func (u *UserControllerImpl) Delete(c *fiber.Ctx) error {
-	panic("unimplemented")
+	userId := c.Params("userId")
+
+	id, err := strconv.Atoi(userId)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: err.Error(),
+		})
+	}
+	err = u.userService.Delete(id)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: err.Error(),
+		})
+	}
+	return c.Status(200).JSON(web.BaseResponse{
+		Status:  200,
+		Message: "Ok",
+	})
 }
 
 // FetchUSer implements UserController.
@@ -66,25 +86,52 @@ func (u *UserControllerImpl) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	isLogin, err := u.userService.Login(*req)
+	isLogin, user, err := u.userService.Login(*req)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,
-			Message: "Internal Server Error",
+			Message: err.Error(),
+		})
+	}
+	if !isLogin {
+		return c.Status(401).JSON(web.BaseResponse{
+			Status:  401,
+			Message: "Unauthorized",
 		})
 	}
 
 	return c.Status(200).JSON(web.BaseResponse{
 		Status:  200,
 		Message: "Success",
-		Data:    isLogin,
+		Data:    user,
 	})
 
 }
 
 // UpdatePassword implements UserController.
 func (u *UserControllerImpl) UpdatePassword(c *fiber.Ctx) error {
-	panic("unimplemented")
+	req := new(request.UpdateUser)
+	username := c.Params("username")
+	err := c.BodyParser(req)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: "Invalid Message Body",
+		})
+	}
+	user, err := u.userService.UpdatePassword(*req, username)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: err.Error(),
+		})
+	}
+	return c.Status(200).JSON(web.BaseResponse{
+		Status:  200,
+		Message: "Success",
+		Data:    user,
+	})
+
 }
 
 func NewUserController(userService service.UserService) UserController {
