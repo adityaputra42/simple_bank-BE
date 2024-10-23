@@ -15,7 +15,7 @@ import (
 
 type UserService interface {
 	Create(req request.CreateUser) (response.UserResponse, error)
-	Login(username, password string) (bool, error)
+	Login(req request.LoginUser) (bool, error)
 	UpdatePassword(req request.UpdateUser, username string) (response.UserResponse, error)
 	Delete(userId int) error
 	FecthUser(username string) (response.UserResponse, error)
@@ -92,8 +92,8 @@ func (u *UserServiceImpl) FecthUser(username string) (response.UserResponse, err
 }
 
 // Login implements UserService.
-func (u *UserServiceImpl) Login(username string, password string) (bool, error) {
-	user, err := u.userRepo.FindByUsername(username)
+func (u *UserServiceImpl) Login(req request.LoginUser) (bool, error) {
+	user, err := u.userRepo.FindByUsername(req.Username)
 	if err == sql.ErrNoRows {
 		fmt.Println("User not found")
 		return false, err
@@ -102,7 +102,7 @@ func (u *UserServiceImpl) Login(username string, password string) (bool, error) 
 		fmt.Println("Query error")
 		return false, err
 	}
-	match, err := helper.CheckPasswordHash(password, user.Password)
+	match, err := helper.CheckPasswordHash(req.Password, user.Password)
 	if !match {
 		fmt.Println("hash and password doesn't match")
 		return false, err

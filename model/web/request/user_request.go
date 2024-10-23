@@ -12,3 +12,8 @@ type UpdateUser struct {
 	OldPassword string `json:"old_password"`
 	Password    string `json:"password"`
 }
+
+type LoginUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
