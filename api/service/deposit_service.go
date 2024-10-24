@@ -15,7 +15,7 @@ import (
 type DepositServie interface {
 	CreateDeposit(req request.DepositRequest) (response.DepositResponse, error)
 	FetchDepositById(DepositId int64) (response.DepositResponse, error)
-	FetchAllDeposit() []response.DepositResponse
+	FetchAllDeposit() ([]response.DepositResponse, error)
 }
 
 type DepositServieImpl struct {
@@ -69,13 +69,16 @@ func (d *DepositServieImpl) CreateDeposit(req request.DepositRequest) (response.
 }
 
 // FetchAllDeposit implements DepositServie.
-func (d *DepositServieImpl) FetchAllDeposit() []response.DepositResponse {
+func (d *DepositServieImpl) FetchAllDeposit() ([]response.DepositResponse, error) {
 	var listDeposit []response.DepositResponse
-	deposits := d.depositRepo.FindAll()
+	deposits, err := d.depositRepo.FindAll()
+	if err != nil {
+		return listDeposit, err
+	}
 	for _, v := range deposits {
 		listDeposit = append(listDeposit, helper.ToDepositRespone(v, v.Account))
 	}
-	return listDeposit
+	return listDeposit, nil
 }
 
 // FetchDepositById implements DepositServie.

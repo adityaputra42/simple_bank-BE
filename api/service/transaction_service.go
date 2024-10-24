@@ -15,8 +15,8 @@ import (
 type TransactionService interface {
 	Transfer(req request.TransferRequest) (response.TransferResponse, error)
 	FecthTransferById(TransactionId string) (response.TransferResponse, error)
-	FecthAllTransferByUserId(UserId int64) []response.TransferResponse
-	FecthAllTransfer() []response.TransferResponse
+	FecthAllTransferByUserId(UserId int64) ([]response.TransferResponse, error)
+	FecthAllTransfer() ([]response.TransferResponse, error)
 }
 
 type TransactionServieImpl struct {
@@ -27,23 +27,29 @@ type TransactionServieImpl struct {
 }
 
 // FecthAllTransfer implements TransactionService.
-func (t *TransactionServieImpl) FecthAllTransfer() []response.TransferResponse {
+func (t *TransactionServieImpl) FecthAllTransfer() ([]response.TransferResponse, error) {
 	var listTransfer []response.TransferResponse
-	transfers := t.transactionRepo.FindAll()
+	transfers, err := t.transactionRepo.FindAll()
+	if err != nil {
+		return listTransfer, err
+	}
 	for _, v := range transfers {
 		listTransfer = append(listTransfer, helper.ToTranferRespone(v, v.FromAccount, v.ToAccount))
 	}
-	return listTransfer
+	return listTransfer, nil
 }
 
 // FecthAllTransferByUserId implements TransactionService.
-func (t *TransactionServieImpl) FecthAllTransferByUserId(UserId int64) []response.TransferResponse {
+func (t *TransactionServieImpl) FecthAllTransferByUserId(UserId int64) ([]response.TransferResponse, error) {
 	var listTransfer []response.TransferResponse
-	transfers := t.transactionRepo.FindAllbyUserId(int(UserId))
+	transfers, err := t.transactionRepo.FindAllbyUserId(int(UserId))
+	if err != nil {
+		return listTransfer, err
+	}
 	for _, v := range transfers {
 		listTransfer = append(listTransfer, helper.ToTranferRespone(v, v.FromAccount, v.ToAccount))
 	}
-	return listTransfer
+	return listTransfer, nil
 }
 
 // FecthTransferById implements TransactionService.

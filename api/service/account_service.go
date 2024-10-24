@@ -5,17 +5,18 @@ import (
 	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
 	"simple_bank_solid/model/domain"
+	"simple_bank_solid/model/web/request"
 	"simple_bank_solid/model/web/response"
 
 	"gorm.io/gorm"
 )
 
 type AccountService interface {
-	CreateAccount(UserId int64) (response.AccountResponse, error)
+	CreateAccount(req request.AccountRequest) (response.AccountResponse, error)
 	DeleteAccount(Id int64) error
 	FetchAccountById(Id int64) (response.AccountResponse, error)
-	FetchAllAccountByUser(UserId int64) []response.AccountResponse
-	FetchAllAccount() []response.AccountResponse
+	FetchAllAccountByUser(UserId int64) ([]response.AccountResponse, error)
+	FetchAllAccount() ([]response.AccountResponse, error)
 }
 
 type AccountServiceImpl struct {
@@ -24,12 +25,13 @@ type AccountServiceImpl struct {
 }
 
 // CreateAccount implements AccountService.
-func (a *AccountServiceImpl) CreateAccount(UserId int64) (response.AccountResponse, error) {
+func (a *AccountServiceImpl) CreateAccount(req request.AccountRequest) (response.AccountResponse, error) {
 	var accountResp response.AccountResponse
 	err := a.db.Transaction(func(tx *gorm.DB) error {
 		account := domain.Account{
-			UserId: UserId, Balance: 0,
-			Currency: "IDR",
+			UserId:   req.UserId,
+			Balance:  0,
+			Currency: req.Currency,
 		}
 		account, err := a.accountRepo.Create(account, tx)
 		if err != nil {
@@ -59,7 +61,10 @@ func (a *AccountServiceImpl) DeleteAccount(Id int64) error {
 	if err != nil {
 		return err
 	}
-	a.accountRepo.Delete(user)
+	err = a.accountRepo.Delete(user)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -73,25 +78,31 @@ func (a *AccountServiceImpl) FetchAccountById(Id int64) (response.AccountRespons
 }
 
 // FetchAllAccount implements AccountService.
-func (a *AccountServiceImpl) FetchAllAccount() []response.AccountResponse {
+func (a *AccountServiceImpl) FetchAllAccount() ([]response.AccountResponse, error) {
 	var listAccount []response.AccountResponse
-	accounts := a.accountRepo.FindAll()
+	accounts, err := a.accountRepo.FindAll()
+	if err != nil {
+		return listAccount, err
+	}
 	for _, value := range accounts {
 		listAccount = append(listAccount, helper.ToAccountResponse(value))
 
 	}
-	return listAccount
+	return listAccount, nil
 }
 
 // FetchAllAccountByUser implements AccountService.
-func (a *AccountServiceImpl) FetchAllAccountByUser(UserId int64) []response.AccountResponse {
+func (a *AccountServiceImpl) FetchAllAccountByUser(UserId int64) ([]response.AccountResponse, error) {
 	var listAccount []response.AccountResponse
-	accounts := a.accountRepo.FindAllbyUserId(int(UserId))
+	accounts, err := a.accountRepo.FindAllbyUserId(int(UserId))
+	if err != nil {
+		return listAccount, err
+	}
 	for _, value := range accounts {
 		listAccount = append(listAccount, helper.ToAccountResponse(value))
 
 	}
-	return listAccount
+	return listAccount, nil
 }
 
 func NewAccountService(AccountRepo repository.AccountRepository) AccountService {

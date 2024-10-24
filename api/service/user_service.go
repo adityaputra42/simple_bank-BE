@@ -78,7 +78,10 @@ func (u *UserServiceImpl) Delete(userId int) error {
 	if err != nil {
 		return err
 	}
-	u.userRepo.Delete(user)
+	err = u.userRepo.Delete(user)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

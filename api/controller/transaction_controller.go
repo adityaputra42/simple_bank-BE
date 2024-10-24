@@ -22,8 +22,13 @@ type TransactionControllerImpl struct {
 
 // FecthAllTransfer implements TransactionController.
 func (t TransactionControllerImpl) FecthAllTransfer(c *fiber.Ctx) error {
-	results := t.transactionService.FecthAllTransfer()
-
+	results, err := t.transactionService.FecthAllTransfer()
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: err.Error(),
+		})
+	}
 	return c.Status(200).JSON(web.BaseResponse{
 		Status:  20,
 		Message: "Success",
@@ -42,7 +47,14 @@ func (t TransactionControllerImpl) FecthAllTransferByUserId(c *fiber.Ctx) error 
 			Message: "Invalid Query Params",
 		})
 	}
-	results := t.transactionService.FecthAllTransferByUserId(intValue)
+	results, err := t.transactionService.FecthAllTransferByUserId(intValue)
+
+	if err != nil {
+		return c.Status(403).JSON(web.BaseResponse{
+			Status:  403,
+			Message: err.Error(),
+		})
+	}
 
 	return c.Status(200).JSON(web.BaseResponse{
 		Status:  20,
@@ -85,7 +97,7 @@ func (t TransactionControllerImpl) Transfer(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,
-			Message: "Internal Server Error",
+			Message: err.Error(),
 		})
 	}
 

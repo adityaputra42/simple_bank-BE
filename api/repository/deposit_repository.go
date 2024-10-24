@@ -2,7 +2,6 @@ package repository
 
 import (
 	"simple_bank_solid/db"
-	"simple_bank_solid/helper"
 	"simple_bank_solid/model/domain"
 
 	"gorm.io/gorm"
@@ -10,9 +9,9 @@ import (
 
 type DepositRepository interface {
 	Create(deposit domain.Deposit, tx *gorm.DB) (domain.Deposit, error)
-	Delete(deposit domain.Deposit)
+	Delete(deposit domain.Deposit) error
 	FindById(depositId int) (domain.Deposit, error)
-	FindAll() []domain.Deposit
+	FindAll() ([]domain.Deposit, error)
 }
 
 type DepositRepositoryImpl struct {
@@ -22,29 +21,29 @@ type DepositRepositoryImpl struct {
 // Create implements DepositRepository.
 func (d *DepositRepositoryImpl) Create(deposit domain.Deposit, tx *gorm.DB) (domain.Deposit, error) {
 	result := tx.Create(&deposit)
-	helper.PanicIfError(result.Error)
+
 	return deposit, result.Error
 }
 
 // Delete implements DepositRepository.
-func (d *DepositRepositoryImpl) Delete(deposit domain.Deposit) {
+func (d *DepositRepositoryImpl) Delete(deposit domain.Deposit) error {
 	result := d.db.Delete(&deposit)
-	helper.PanicIfError(result.Error)
+	return result.Error
 }
 
 // FindAll implements DepositRepository.
-func (d *DepositRepositoryImpl) FindAll() []domain.Deposit {
+func (d *DepositRepositoryImpl) FindAll() ([]domain.Deposit, error) {
 	deposits := []domain.Deposit{}
 	result := d.db.Model(&domain.Deposit{}).Preload("Account").Find(&deposits)
-	helper.PanicIfError(result.Error)
-	return deposits
+
+	return deposits, result.Error
 }
 
 // FindById implements DepositRepository.
 func (d *DepositRepositoryImpl) FindById(depositId int) (domain.Deposit, error) {
 	deposit := domain.Deposit{}
 	err := d.db.Model(&domain.Deposit{}).Preload("Account").Take(&deposit, "id = ?", depositId).Error
-	helper.PanicIfError(err)
+
 	return deposit, err
 }
 

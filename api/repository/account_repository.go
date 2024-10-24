@@ -2,7 +2,6 @@ package repository
 
 import (
 	"simple_bank_solid/db"
-	"simple_bank_solid/helper"
 	"simple_bank_solid/model/domain"
 
 	"gorm.io/gorm"
@@ -11,10 +10,10 @@ import (
 type AccountRepository interface {
 	Create(account domain.Account, tx *gorm.DB) (domain.Account, error)
 	Update(account domain.Account, tx *gorm.DB) (domain.Account, error)
-	Delete(account domain.Account)
+	Delete(account domain.Account) error
 	FindById(accountId int) (domain.Account, error)
-	FindAllbyUserId(UserId int) []domain.Account
-	FindAll() []domain.Account
+	FindAllbyUserId(UserId int) ([]domain.Account, error)
+	FindAll() ([]domain.Account, error)
 }
 
 type AccountRepositoryImpl struct {
@@ -24,44 +23,43 @@ type AccountRepositoryImpl struct {
 // Create implements AccountReposiotry.
 func (a *AccountRepositoryImpl) Create(account domain.Account, tx *gorm.DB) (domain.Account, error) {
 	result := tx.Create(&account)
-	helper.PanicIfError(result.Error)
+
 	return account, result.Error
 }
 
 // Delete implements AccountReposiotry.
-func (a *AccountRepositoryImpl) Delete(account domain.Account) {
+func (a *AccountRepositoryImpl) Delete(account domain.Account) error {
 	result := a.db.Delete(&account)
-	helper.PanicIfError(result.Error)
+	return result.Error
 }
 
 // FindAll implements AccountReposiotry.
-func (a *AccountRepositoryImpl) FindAll() []domain.Account {
+func (a *AccountRepositoryImpl) FindAll() ([]domain.Account, error) {
 	accounts := []domain.Account{}
 	result := a.db.Find(&accounts)
-	helper.PanicIfError(result.Error)
-	return accounts
+	return accounts, result.Error
 }
 
 // FindAllbyUserId implements AccountReposiotry.
-func (a *AccountRepositoryImpl) FindAllbyUserId(UserId int) []domain.Account {
+func (a *AccountRepositoryImpl) FindAllbyUserId(UserId int) ([]domain.Account, error) {
 	accounts := []domain.Account{}
 	result := a.db.Find(&accounts, "user_id = ?", UserId)
-	helper.PanicIfError(result.Error)
-	return accounts
+
+	return accounts, result.Error
 }
 
 // FindById implements AccountReposiotry.
 func (a *AccountRepositoryImpl) FindById(accountId int) (domain.Account, error) {
 	account := domain.Account{}
 	err := a.db.Model(&domain.Account{}).Take(&account, "id =?", accountId).Error
-	helper.PanicIfError(err)
+
 	return account, err
 }
 
 // Update implements AccountReposiotry.
 func (a *AccountRepositoryImpl) Update(account domain.Account, tx *gorm.DB) (domain.Account, error) {
 	result := tx.Save(&account)
-	helper.PanicIfError(result.Error)
+
 	return account, result.Error
 }
 
