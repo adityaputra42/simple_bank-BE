@@ -4,6 +4,7 @@ import (
 	"log"
 	"simple_bank_solid/config"
 	"simple_bank_solid/db"
+	"simple_bank_solid/routes"
 )
 
 func main() {
@@ -13,6 +14,6 @@ func main() {
 		panic(err)
 	}
 	db.InitDB(conf.DbSource)
+	routes.InitServer(conf)
 
-	
 }

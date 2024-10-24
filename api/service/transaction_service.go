@@ -130,7 +130,7 @@ func (t *TransactionServieImpl) Transfer(req request.TransferRequest) (response.
 	return response, nil
 }
 
-func NewTranserService(
+func NewTransactionService(
 	AccountRepo repository.AccountRepository,
 	TransactionRepo repository.TransactionRepository,
 	EntriesRepo repository.EntriesRepository,
