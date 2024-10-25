@@ -2,8 +2,10 @@ package controller
 
 import (
 	"simple_bank_solid/api/service"
+	"simple_bank_solid/helper"
 	"simple_bank_solid/model/web"
 	"simple_bank_solid/model/web/request"
+	"simple_bank_solid/token"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -57,7 +59,10 @@ func (a *AccountControllerImpl) DeleteAccount(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
-	err = a.accountService.DeleteAccount(int64(id))
+
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
+
+	err = a.accountService.DeleteAccount(int64(id), authPayload.UserId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,
@@ -81,7 +86,9 @@ func (a *AccountControllerImpl) FetchAccountById(c *fiber.Ctx) error {
 		})
 	}
 
-	result, err := a.accountService.FetchAccountById(int64(id))
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
+
+	result, err := a.accountService.FetchAccountById(int64(id), authPayload.UserId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,
@@ -113,16 +120,8 @@ func (a *AccountControllerImpl) FetchAllAccount(c *fiber.Ctx) error {
 
 // FetchAllAccountByUser implements AccountController.
 func (a *AccountControllerImpl) FetchAllAccountByUser(c *fiber.Ctx) error {
-	userId := c.Params("userId")
-
-	id, err := strconv.Atoi(userId)
-	if err != nil {
-		return c.Status(500).JSON(web.BaseResponse{
-			Status:  500,
-			Message: err.Error(),
-		})
-	}
-	response, err := a.accountService.FetchAllAccountByUser(int64(id))
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
+	response, err := a.accountService.FetchAllAccountByUser(authPayload.UserId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,

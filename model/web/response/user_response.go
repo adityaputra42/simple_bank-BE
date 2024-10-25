@@ -11,3 +11,8 @@ type UserResponse struct {
 	UpdatedAt time.Time         `json:"updated_at"`
 	Accounts  []AccountResponse `json:"accounts"`
 }
+
+type LoginResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        UserResponse `json:"user"`
+}

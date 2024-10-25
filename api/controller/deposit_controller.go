@@ -2,8 +2,10 @@ package controller
 
 import (
 	"simple_bank_solid/api/service"
+	"simple_bank_solid/helper"
 	"simple_bank_solid/model/web"
 	"simple_bank_solid/model/web/request"
+	"simple_bank_solid/token"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,7 +31,9 @@ func (d *DepositControllerImpl) CreateDeposit(c *fiber.Ctx) error {
 			Message: "Invalid Message Body",
 		})
 	}
-	response, err := d.depositService.CreateDeposit(*req)
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
+
+	response, err := d.depositService.CreateDeposit(*req, authPayload.UserId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,

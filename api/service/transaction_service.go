@@ -13,7 +13,7 @@ import (
 )
 
 type TransactionService interface {
-	Transfer(req request.TransferRequest) (response.TransferResponse, error)
+	Transfer(req request.TransferRequest, userId int64) (response.TransferResponse, error)
 	FecthTransferById(TransactionId string) (response.TransferResponse, error)
 	FecthAllTransferByUserId(UserId int64) ([]response.TransferResponse, error)
 	FecthAllTransfer() ([]response.TransferResponse, error)
@@ -62,13 +62,18 @@ func (t *TransactionServieImpl) FecthTransferById(TransactionId string) (respons
 }
 
 // Transfer implements TransactionService.
-func (t *TransactionServieImpl) Transfer(req request.TransferRequest) (response.TransferResponse, error) {
+func (t *TransactionServieImpl) Transfer(req request.TransferRequest, userId int64) (response.TransferResponse, error) {
 	var response response.TransferResponse
 	err := t.db.Transaction(func(tx *gorm.DB) error {
 		fromAccount, fromAccountValid := helper.ValidAccount(tx, req.FromAccountID, req.Currency)
 		if fromAccountValid != true {
 			return errors.New("From account invalid")
 		}
+		if fromAccount.UserId != userId {
+			err := errors.New("from account doesn't belong to the authenticated user")
+			return err
+		}
+
 		toAccount, toAccountValid := helper.ValidAccount(tx, req.ToAccountID, req.Currency)
 		if toAccountValid != true {
 			return errors.New("To account invalid")

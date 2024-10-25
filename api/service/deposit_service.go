@@ -13,7 +13,7 @@ import (
 )
 
 type DepositServie interface {
-	CreateDeposit(req request.DepositRequest) (response.DepositResponse, error)
+	CreateDeposit(req request.DepositRequest, userId int64) (response.DepositResponse, error)
 	FetchDepositById(DepositId int64) (response.DepositResponse, error)
 	FetchAllDeposit() ([]response.DepositResponse, error)
 }
@@ -26,7 +26,7 @@ type DepositServieImpl struct {
 }
 
 // CreateDeposit implements DepositServie.
-func (d *DepositServieImpl) CreateDeposit(req request.DepositRequest) (response.DepositResponse, error) {
+func (d *DepositServieImpl) CreateDeposit(req request.DepositRequest, userId int64) (response.DepositResponse, error) {
 	var response response.DepositResponse
 	err := d.db.Transaction(func(tx *gorm.DB) error {
 		account, valid := helper.ValidAccount(tx, req.AccountId, req.Currency)
@@ -35,6 +35,9 @@ func (d *DepositServieImpl) CreateDeposit(req request.DepositRequest) (response.
 			return errors.New("Account not valid")
 		}
 
+		if account.UserId != userId {
+			return errors.New("Account Invalid Permition")
+		}
 		depositReq := domain.Deposit{
 			Amount: req.Amount, Currency: req.Currency, AccountId: req.AccountId,
 		}

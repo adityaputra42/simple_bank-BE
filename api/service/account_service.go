@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"simple_bank_solid/api/repository"
 	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
@@ -13,8 +14,8 @@ import (
 
 type AccountService interface {
 	CreateAccount(req request.AccountRequest) (response.AccountResponse, error)
-	DeleteAccount(Id int64) error
-	FetchAccountById(Id int64) (response.AccountResponse, error)
+	DeleteAccount(Id int64, userId int64) error
+	FetchAccountById(Id int64, userId int64) (response.AccountResponse, error)
 	FetchAllAccountByUser(UserId int64) ([]response.AccountResponse, error)
 	FetchAllAccount() ([]response.AccountResponse, error)
 }
@@ -56,12 +57,15 @@ func (a *AccountServiceImpl) CreateAccount(req request.AccountRequest) (response
 }
 
 // DeleteAccount implements AccountService.
-func (a *AccountServiceImpl) DeleteAccount(Id int64) error {
-	user, err := a.accountRepo.FindById(int(Id))
+func (a *AccountServiceImpl) DeleteAccount(Id int64, userId int64) error {
+	account, err := a.accountRepo.FindById(int(Id))
 	if err != nil {
 		return err
 	}
-	err = a.accountRepo.Delete(user)
+	if account.UserId != userId {
+		return errors.New("Auth Invalid Permition")
+	}
+	err = a.accountRepo.Delete(account)
 	if err != nil {
 		return err
 	}
@@ -69,10 +73,13 @@ func (a *AccountServiceImpl) DeleteAccount(Id int64) error {
 }
 
 // FetchAccountById implements AccountService.
-func (a *AccountServiceImpl) FetchAccountById(Id int64) (response.AccountResponse, error) {
+func (a *AccountServiceImpl) FetchAccountById(Id int64, userId int64) (response.AccountResponse, error) {
 	account, err := a.accountRepo.FindById(int(Id))
 	if err != nil {
-		return helper.ToAccountResponse(account), err
+		return response.AccountResponse{}, err
+	}
+	if account.UserId != userId {
+		return response.AccountResponse{}, errors.New("Auth Invalid Permition")
 	}
 	return helper.ToAccountResponse(account), nil
 }

@@ -2,9 +2,10 @@ package controller
 
 import (
 	"simple_bank_solid/api/service"
+	"simple_bank_solid/helper"
 	"simple_bank_solid/model/web"
 	"simple_bank_solid/model/web/request"
-	"strconv"
+	"simple_bank_solid/token"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -39,15 +40,8 @@ func (t TransactionControllerImpl) FecthAllTransfer(c *fiber.Ctx) error {
 
 // FecthAllTransferByUserId implements TransactionController.
 func (t TransactionControllerImpl) FecthAllTransferByUserId(c *fiber.Ctx) error {
-	userId := c.Params("userId")
-	intValue, err := strconv.ParseInt(userId, 10, 64)
-	if err != nil {
-		return c.Status(500).JSON(web.BaseResponse{
-			Status:  500,
-			Message: "Invalid Query Params",
-		})
-	}
-	results, err := t.transactionService.FecthAllTransferByUserId(intValue)
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
+	results, err := t.transactionService.FecthAllTransferByUserId(authPayload.UserId)
 
 	if err != nil {
 		return c.Status(403).JSON(web.BaseResponse{
@@ -85,6 +79,7 @@ func (t TransactionControllerImpl) FecthTransferById(c *fiber.Ctx) error {
 // Transfer implements TransactionController.
 func (t TransactionControllerImpl) Transfer(c *fiber.Ctx) error {
 	req := new(request.TransferRequest)
+	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
 
 	err := c.BodyParser(req)
 	if err != nil {
@@ -93,7 +88,7 @@ func (t TransactionControllerImpl) Transfer(c *fiber.Ctx) error {
 			Message: "Invalid Message Body",
 		})
 	}
-	result, err := t.transactionService.Transfer(*req)
+	result, err := t.transactionService.Transfer(*req, authPayload.UserId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,
