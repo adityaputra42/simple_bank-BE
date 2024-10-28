@@ -8,6 +8,7 @@ type User struct {
 	Password  string    `gorm:"column:password"`
 	FullName  string    `gorm:"column:full_name"`
 	Email     string    `gorm:"column:email"`
+	Role      string    `gorm:"column:role"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime;<-:create"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoCreateTime;autoUpdateTime"`
 	Accounts  []Account `gorm:"foreignKey:user_id;references:id"`

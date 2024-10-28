@@ -14,10 +14,18 @@ type UserRepository interface {
 	Delete(user domain.User) error
 	FindById(UserId int) (domain.User, error)
 	FindByUsername(Username string) (domain.User, error)
+	FetchAllUser() ([]domain.User, error)
 }
 
 type UserRepositoryImpl struct {
 	db *gorm.DB
+}
+
+// FetchAllUser implements UserRepository.
+func (u *UserRepositoryImpl) FetchAllUser() ([]domain.User, error) {
+	users := []domain.User{}
+	err := u.db.Model(&domain.User{}).Preload("Accounts").Find(&users, "role =?", "member").Error
+	return users, err
 }
 
 // Create implements UserRepository.
@@ -31,6 +39,7 @@ func (u *UserRepositoryImpl) Create(user domain.User, tx *gorm.DB) (domain.User,
 		FullName: user.FullName,
 		Email:    user.Email,
 		Password: hash,
+		Role:     user.Role,
 	}
 	result := tx.Create(&newUser)
 

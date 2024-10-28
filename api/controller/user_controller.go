@@ -11,19 +11,37 @@ import (
 )
 
 type UserController interface {
-	Create(c *fiber.Ctx) error
+	CreateUser(c *fiber.Ctx) error
+	CreateAdmin(c *fiber.Ctx) error
 	UpdatePassword(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
 	FetchUSer(c *fiber.Ctx) error
+	FetchAllUSer(c *fiber.Ctx) error
 }
 
 type UserControllerImpl struct {
 	userService service.UserService
 }
 
-// Create implements UserController.
-func (u *UserControllerImpl) Create(c *fiber.Ctx) error {
+// FetchAllUSer implements UserController.
+func (u *UserControllerImpl) FetchAllUSer(c *fiber.Ctx) error {
+	users, err := u.userService.FecthAllUser()
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: err.Error(),
+		})
+	}
+	return c.Status(201).JSON(web.BaseResponse{
+		Status:  201,
+		Message: "Success",
+		Data:    users,
+	})
+}
+
+// CreateAdmin implements UserController.
+func (u *UserControllerImpl) CreateAdmin(c *fiber.Ctx) error {
 	req := new(request.CreateUser)
 
 	err := c.BodyParser(req)
@@ -34,7 +52,33 @@ func (u *UserControllerImpl) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := u.userService.Create(*req)
+	user, err := u.userService.CreateAdmin(*req)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: "Internal Server Error",
+		})
+	}
+	return c.Status(201).JSON(web.BaseResponse{
+		Status:  201,
+		Message: "Success",
+		Data:    user,
+	})
+}
+
+// Create implements UserController.
+func (u *UserControllerImpl) CreateUser(c *fiber.Ctx) error {
+	req := new(request.CreateUser)
+
+	err := c.BodyParser(req)
+	if err != nil {
+		return c.Status(500).JSON(web.BaseResponse{
+			Status:  500,
+			Message: "Invalid Message Body",
+		})
+	}
+
+	user, err := u.userService.CreateUser(*req)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,

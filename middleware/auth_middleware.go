@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
+	"simple_bank_solid/model/domain"
 	"simple_bank_solid/token"
 	"strings"
 
@@ -45,8 +47,18 @@ func AuthMiddleware(c *fiber.Ctx) error {
 			"error": err,
 		})
 	}
-
 	c.Locals(helper.GetPayloadKey(), payload)
+
+	db := db.GetConnection()
+	user := domain.User{}
+
+	err = db.Model(&domain.User{}).Take(&user, "id = ?", payload.UserId).Error
+
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	c.Locals("CurrentUser", user)
 
 	return c.Next()
 

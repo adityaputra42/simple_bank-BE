@@ -28,7 +28,7 @@ func (t *TransactionRepositoryImpl) Create(transaction domain.Transaction, tx *g
 // FindAll implements TransactionRepository.
 func (t *TransactionRepositoryImpl) FindAll() ([]domain.Transaction, error) {
 	transactions := []domain.Transaction{}
-	result := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Find(&transactions)
+	result := t.db.Model(&domain.Transaction{}).Preload("FromAccount").Preload("ToAccount").Find(&transactions)
 
 	return transactions, result.Error
 }
@@ -36,7 +36,9 @@ func (t *TransactionRepositoryImpl) FindAll() ([]domain.Transaction, error) {
 // FindAllbyUserId implements TransactionRepository.
 func (t *TransactionRepositoryImpl) FindAllbyUserId(userId int) ([]domain.Transaction, error) {
 	transactions := []domain.Transaction{}
-	result := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Find(&transactions, "user_id = ?", userId)
+	result := t.db.Model(&domain.Transaction{}).Joins("JOIN accounts AS from_accounts ON from_accounts.id = transactions.from_account_id").
+		Joins("JOIN accounts AS to_accounts ON to_accounts.id = transactions.to_account_id").
+		Where("from_accounts.user_id = ? OR to_accounts.user_id = ?", userId, userId).Preload("FromAccount").Preload("ToAccount").Find(&transactions)
 
 	return transactions, result.Error
 }
@@ -44,7 +46,7 @@ func (t *TransactionRepositoryImpl) FindAllbyUserId(userId int) ([]domain.Transa
 // FindById implements TransactionRepository.
 func (t *TransactionRepositoryImpl) FindById(transactionId string) (domain.Transaction, error) {
 	transaction := domain.Transaction{}
-	err := t.db.Model(&domain.Account{}).Preload("FromAccount").Preload("ToAccount").Take(&transaction, "id =?", transactionId).Error
+	err := t.db.Model(&domain.Transaction{}).Preload("FromAccount").Preload("ToAccount").Take(&transaction, "id =?", transactionId).Error
 	return transaction, err
 }
 

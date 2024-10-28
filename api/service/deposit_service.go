@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"simple_bank_solid/api/repository"
 	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
@@ -16,6 +17,8 @@ type DepositServie interface {
 	CreateDeposit(req request.DepositRequest, userId int64) (response.DepositResponse, error)
 	FetchDepositById(DepositId int64) (response.DepositResponse, error)
 	FetchAllDeposit() ([]response.DepositResponse, error)
+	FetchAllDepositByUserId(userId int64) ([]response.DepositResponse, error)
+	Delete(depositId int64) error
 }
 
 type DepositServieImpl struct {
@@ -23,6 +26,31 @@ type DepositServieImpl struct {
 	depositRepo repository.DepositRepository
 	entriesRepo repository.EntriesRepository
 	db          *gorm.DB
+}
+
+// Delete implements DepositServie.
+func (d *DepositServieImpl) Delete(depositId int64) error {
+	deposit, err := d.depositRepo.FindById(int(depositId))
+	if err != nil {
+		return fmt.Errorf("Deposit not found")
+	}
+	err = d.depositRepo.Delete(deposit)
+	return err
+}
+
+// FetchAllDepositByUserId implements DepositServie.
+func (d *DepositServieImpl) FetchAllDepositByUserId(userId int64) ([]response.DepositResponse, error) {
+	listDeposit := []response.DepositResponse{}
+	deposit, err := d.depositRepo.FindAllbyUser(userId)
+	if err != nil {
+		return listDeposit, err
+	}
+
+	for _, v := range deposit {
+		listDeposit = append(listDeposit, helper.ToDepositRespone(v, v.Account))
+	}
+	return listDeposit, nil
+
 }
 
 // CreateDeposit implements DepositServie.

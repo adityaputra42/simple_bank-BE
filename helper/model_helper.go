@@ -49,6 +49,7 @@ func ToUserResponse(user domain.User) response.UserResponse {
 		Username: user.Username,
 		FullName: user.FullName,
 		Email:    user.Email,
+		Role:     user.Role,
 		Accounts: listAccount,
 	}
 }

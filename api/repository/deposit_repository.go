@@ -11,11 +11,20 @@ type DepositRepository interface {
 	Create(deposit domain.Deposit, tx *gorm.DB) (domain.Deposit, error)
 	Delete(deposit domain.Deposit) error
 	FindById(depositId int) (domain.Deposit, error)
+	FindAllbyUser(userId int64) ([]domain.Deposit, error)
 	FindAll() ([]domain.Deposit, error)
 }
 
 type DepositRepositoryImpl struct {
 	db *gorm.DB
+}
+
+// FindAllbyUser implements DepositRepository.
+func (d *DepositRepositoryImpl) FindAllbyUser(userId int64) ([]domain.Deposit, error) {
+	deposits := []domain.Deposit{}
+	result := d.db.Model(&domain.Deposit{}).Joins("JOIN accounts ON accounts.id = deposits.account_id").Where("accounts.user_id = ?", userId).Preload("Account").Find(&deposits)
+
+	return deposits, result.Error
 }
 
 // Create implements DepositRepository.

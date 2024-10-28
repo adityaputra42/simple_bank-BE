@@ -4,6 +4,7 @@ CREATE TABLE users (
   password varchar(100) NOT NULL,
   full_name varchar(255) NOT NULL,
   email varchar(100) UNIQUE NOT NULL,
+  role varchar(100) NOT NULL,
   updated_at timestamp NOT NULL DEFAULT current_timestamp  ON UPDATE current_timestamp,
   created_at timestamp NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)  

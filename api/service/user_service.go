@@ -16,11 +16,13 @@ import (
 )
 
 type UserService interface {
-	Create(req request.CreateUser) (response.UserResponse, error)
+	CreateUser(req request.CreateUser) (response.UserResponse, error)
+	CreateAdmin(req request.CreateUser) (response.UserResponse, error)
 	Login(req request.LoginUser) (bool, response.LoginResponse, error)
 	UpdatePassword(req request.UpdateUser, username string) (response.UserResponse, error)
 	Delete(username string) error
 	FecthUser(username string) (response.UserResponse, error)
+	FecthAllUser() ([]response.UserResponse, error)
 }
 
 type UserServiceImpl struct {
@@ -30,8 +32,57 @@ type UserServiceImpl struct {
 	tokenMaker  token.Maker
 }
 
+// FecthAllUser implements UserService.
+func (u *UserServiceImpl) FecthAllUser() ([]response.UserResponse, error) {
+	users := []response.UserResponse{}
+	result, err := u.userRepo.FetchAllUser()
+	if err != nil {
+		return users, err
+	}
+
+	for _, value := range result {
+		users = append(users, helper.ToUserResponse(value))
+
+	}
+	return users, nil
+}
+
+// CreateAdmin implements UserService.
+func (u *UserServiceImpl) CreateAdmin(req request.CreateUser) (response.UserResponse, error) {
+	var admin response.UserResponse
+	err := u.db.Transaction(func(tx *gorm.DB) error {
+		userData := domain.User{
+			FullName: req.FullName,
+			Email:    req.Email,
+			Username: req.Username,
+			Password: req.Password,
+			Role:     "admin",
+		}
+		userData, err := u.userRepo.Create(userData, tx)
+		if err != nil {
+			return err
+		}
+		admin = response.UserResponse{
+			ID:        userData.ID,
+			Username:  userData.Username,
+			FullName:  userData.FullName,
+			Email:     userData.Email,
+			Role:      userData.Role,
+			CreatedAt: userData.CreatedAt,
+			UpdatedAt: userData.UpdatedAt,
+		}
+		return err
+	})
+	if err != nil {
+		return admin, err
+	}
+
+	return admin, nil
+
+}
+
 // Create implements UserService.
-func (u *UserServiceImpl) Create(req request.CreateUser) (response.UserResponse, error) {
+func (u *UserServiceImpl) CreateUser(req request.CreateUser) (response.UserResponse, error) {
 	var user response.UserResponse
 
 	err := u.db.Transaction(func(tx *gorm.DB) error {
@@ -41,6 +92,7 @@ func (u *UserServiceImpl) Create(req request.CreateUser) (response.UserResponse,
 			Email:    req.Email,
 			Username: req.Username,
 			Password: req.Password,
+			Role:     "member",
 		}
 		userData, err := u.userRepo.Create(userData, tx)
 		if err != nil {
@@ -56,10 +108,13 @@ func (u *UserServiceImpl) Create(req request.CreateUser) (response.UserResponse,
 			return err
 		}
 		user = response.UserResponse{
-			ID:       user.ID,
-			Username: user.Username,
-			FullName: user.FullName,
-			Email:    user.Email,
+			ID:        userData.ID,
+			Username:  userData.Username,
+			FullName:  userData.FullName,
+			Email:     userData.Email,
+			Role:      userData.Role,
+			CreatedAt: userData.CreatedAt,
+			UpdatedAt: userData.UpdatedAt,
 			Accounts: []response.AccountResponse{
 				helper.ToAccountResponse(account),
 			},
