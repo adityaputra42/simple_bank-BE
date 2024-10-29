@@ -15,10 +15,27 @@ type TransactionController interface {
 	FecthTransferById(c *fiber.Ctx) error
 	FecthAllTransferByUserId(c *fiber.Ctx) error
 	FecthAllTransfer(c *fiber.Ctx) error
+	DeleteTransfer(c *fiber.Ctx) error
 }
 
 type TransactionControllerImpl struct {
 	transactionService service.TransactionService
+}
+
+// DeleteTransfer implements TransactionController.
+func (t *TransactionControllerImpl) DeleteTransfer(c *fiber.Ctx) error {
+	id := c.Params("tx_id")
+	err := t.transactionService.DeleteTransfer(id)
+	if err != nil {
+		return c.Status(402).JSON(web.BaseResponse{
+			Status:  402,
+			Message: err.Error(),
+		})
+	}
+	return c.Status(200).JSON(web.BaseResponse{
+		Status:  200,
+		Message: "Success",
+	})
 }
 
 // FecthAllTransfer implements TransactionController.

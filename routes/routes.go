@@ -42,14 +42,17 @@ func RouteInit(app *fiber.App) {
 		api_user.Post("/accounts/create", accountController.CreateAccount)
 		api_user.Get("/accounts", accountController.FetchAllAccountByUser)
 		api_user.Get("/accounts/:account_id", accountController.FetchAccountById)
+		api_user.Get("/accounts/delete/:account_id", accountController.DeleteAccount)
 
 		api_user.Post("/deposit", depositController.CreateDeposit)
 		api_user.Get("/deposit", depositController.FetchAllDeposit)
 		api_user.Get("/deposit/:id", depositController.FetchDepositById)
+		api_user.Get("/deposit/delete/:id", depositController.Delete)
 
 		api_user.Post("/transfer", transactionController.Transfer)
 		api_user.Get("/transfer", transactionController.FecthAllTransferByUserId)
 		api_user.Get("/transfer/:tx_id", transactionController.FecthTransferById)
+		api_user.Get("/transfer/delete/:tx_id", transactionController.DeleteTransfer)
 
 	}
 
@@ -61,6 +64,7 @@ func RouteInit(app *fiber.App) {
 		api_admin.Delete("/deposit", depositController.Delete)
 		api_admin.Get("/transfer", transactionController.FecthAllTransfer)
 		api_admin.Get("/users", userController.FetchAllUSer)
+		api_admin.Get("/users/delete/:id", userController.Delete)
 	}
 
 }

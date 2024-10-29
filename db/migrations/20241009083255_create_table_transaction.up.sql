@@ -5,6 +5,7 @@ CREATE TABLE transactions(
   amount bigint NOT NULL,
   currency varchar(100) NOT NULL,
   created_at timestamp NOT NULL DEFAULT current_timestamp,
+  deleted_at timestamp NULL,
   PRIMARY KEY(id),
   FOREIGN KEY(from_account_id) REFERENCES accounts(id),
   FOREIGN KEY(to_account_id)REFERENCES accounts(id)

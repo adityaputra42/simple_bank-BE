@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"simple_bank_solid/api/repository"
 	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
@@ -17,6 +18,7 @@ type TransactionService interface {
 	FecthTransferById(TransactionId string) (response.TransferResponse, error)
 	FecthAllTransferByUserId(UserId int64) ([]response.TransferResponse, error)
 	FecthAllTransfer() ([]response.TransferResponse, error)
+	DeleteTransfer(TxId string) error
 }
 
 type TransactionServieImpl struct {
@@ -24,6 +26,21 @@ type TransactionServieImpl struct {
 	transactionRepo repository.TransactionRepository
 	entriesRepo     repository.EntriesRepository
 	db              *gorm.DB
+}
+
+// DeleteTransfer implements TransactionService.
+func (t *TransactionServieImpl) DeleteTransfer(TxId string) error {
+
+	transfer, err := t.transactionRepo.FindById(TxId)
+	if err != nil {
+		return fmt.Errorf("Data transfer not found")
+	}
+
+	err = t.transactionRepo.Delete(transfer)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // FecthAllTransfer implements TransactionService.

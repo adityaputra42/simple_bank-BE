@@ -11,6 +11,7 @@ type TransactionRepository interface {
 	Create(transaction domain.Transaction, tx *gorm.DB) (domain.Transaction, error)
 	FindById(transactionId string) (domain.Transaction, error)
 	FindAllbyUserId(userId int) ([]domain.Transaction, error)
+	Delete(transaction domain.Transaction) error
 	FindAll() ([]domain.Transaction, error)
 }
 
@@ -18,10 +19,15 @@ type TransactionRepositoryImpl struct {
 	db *gorm.DB
 }
 
+// Delete implements TransactionRepository.
+func (t *TransactionRepositoryImpl) Delete(transaction domain.Transaction) error {
+	err := t.db.Delete(transaction).Error
+	return err
+}
+
 // Create implements TransactionRepository.
 func (t *TransactionRepositoryImpl) Create(transaction domain.Transaction, tx *gorm.DB) (domain.Transaction, error) {
 	result := tx.Create(&transaction)
-
 	return transaction, result.Error
 }
 
@@ -39,7 +45,6 @@ func (t *TransactionRepositoryImpl) FindAllbyUserId(userId int) ([]domain.Transa
 	result := t.db.Model(&domain.Transaction{}).Joins("JOIN accounts AS from_accounts ON from_accounts.id = transactions.from_account_id").
 		Joins("JOIN accounts AS to_accounts ON to_accounts.id = transactions.to_account_id").
 		Where("from_accounts.user_id = ? OR to_accounts.user_id = ?", userId, userId).Preload("FromAccount").Preload("ToAccount").Find(&transactions)
-
 	return transactions, result.Error
 }
 

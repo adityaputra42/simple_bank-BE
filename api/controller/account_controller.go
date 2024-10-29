@@ -28,8 +28,8 @@ func (a *AccountControllerImpl) CreateAccount(c *fiber.Ctx) error {
 	req := new(request.AccountRequest)
 	err := c.BodyParser(req)
 	if err != nil {
-		return c.Status(500).JSON(web.BaseResponse{
-			Status:  500,
+		return c.Status(402).JSON(web.BaseResponse{
+			Status:  402,
 			Message: "Invalid Message Body",
 		})
 	}
