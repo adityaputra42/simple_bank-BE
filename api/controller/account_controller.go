@@ -50,7 +50,7 @@ func (a *AccountControllerImpl) CreateAccount(c *fiber.Ctx) error {
 
 // DeleteAccount implements AccountController.
 func (a *AccountControllerImpl) DeleteAccount(c *fiber.Ctx) error {
-	accountId := c.Params("accountId")
+	accountId := c.Params("account_id")
 
 	id, err := strconv.Atoi(accountId)
 	if err != nil {
@@ -77,7 +77,7 @@ func (a *AccountControllerImpl) DeleteAccount(c *fiber.Ctx) error {
 
 // FetchAccountById implements AccountController.
 func (a *AccountControllerImpl) FetchAccountById(c *fiber.Ctx) error {
-	accountId := c.Params("accountId")
+	accountId := c.Params("account_id")
 	id, err := strconv.Atoi(accountId)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
