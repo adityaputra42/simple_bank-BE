@@ -35,7 +35,7 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	}
 
 	authorizationType := strings.ToLower(fields[0])
-	if authorizationType != helper.GetTypeBeare() {
+	if authorizationType != helper.GetTypeBearer() {
 		err := fmt.Errorf("unsupported authorization type %s", authorizationType)
 		return c.Status(http.StatusUnauthorized).JSON(web.BaseResponse{
 			Status:  http.StatusUnauthorized,

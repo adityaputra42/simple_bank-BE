@@ -9,7 +9,7 @@ const (
 func GetHeaderKey() string {
 	return authorizationHeaderKey
 }
-func GetTypeBeare() string {
+func GetTypeBearer() string {
 	return authorizationTypeBearer
 }
 func GetPayloadKey() string {

@@ -15,7 +15,7 @@ import (
 type AccountService interface {
 	CreateAccount(req request.AccountRequest) (response.AccountResponse, error)
 	DeleteAccount(Id int64, userId int64) error
-	FetchAccountById(Id int64, userId int64) (response.AccountResponse, error)
+	FetchAccountById(Id int64) (response.AccountResponse, error)
 	FetchAllAccountByUser(UserId int64) ([]response.AccountResponse, error)
 	FetchAllAccount() ([]response.AccountResponse, error)
 }
@@ -73,14 +73,12 @@ func (a *AccountServiceImpl) DeleteAccount(Id int64, userId int64) error {
 }
 
 // FetchAccountById implements AccountService.
-func (a *AccountServiceImpl) FetchAccountById(Id int64, userId int64) (response.AccountResponse, error) {
+func (a *AccountServiceImpl) FetchAccountById(Id int64, ) (response.AccountResponse, error) {
 	account, err := a.accountRepo.FindById(int(Id))
 	if err != nil {
 		return response.AccountResponse{}, err
 	}
-	if account.UserId != userId {
-		return response.AccountResponse{}, errors.New("Auth Invalid Permition")
-	}
+
 	return helper.ToAccountResponse(account), nil
 }
 

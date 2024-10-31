@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"simple_bank_solid/api/service"
 	"simple_bank_solid/helper"
 	"simple_bank_solid/model/web"
@@ -86,12 +87,11 @@ func (a *AccountControllerImpl) FetchAccountById(c *fiber.Ctx) error {
 		})
 	}
 
-	authPayload := c.Locals(helper.GetPayloadKey()).(*token.Payload)
-
-	result, err := a.accountService.FetchAccountById(int64(id), authPayload.UserId)
+	result, err := a.accountService.FetchAccountById(int64(id))
 	if err != nil {
-		return c.Status(500).JSON(web.BaseResponse{
-			Status:  500,
+		fmt.Println("error get account ", err.Error())
+		return c.Status(404).JSON(web.BaseResponse{
+			Status:  404,
 			Message: err.Error(),
 		})
 	}

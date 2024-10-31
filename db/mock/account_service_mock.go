@@ -65,18 +65,18 @@ func (mr *MockAccountServiceMockRecorder) DeleteAccount(Id, userId interface{}) 
 }
 
 // FetchAccountById mocks base method.
-func (m *MockAccountService) FetchAccountById(Id, userId int64) (response.AccountResponse, error) {
+func (m *MockAccountService) FetchAccountById(Id int64) (response.AccountResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchAccountById", Id, userId)
+	ret := m.ctrl.Call(m, "FetchAccountById", Id)
 	ret0, _ := ret[0].(response.AccountResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchAccountById indicates an expected call of FetchAccountById.
-func (mr *MockAccountServiceMockRecorder) FetchAccountById(Id, userId interface{}) *gomock.Call {
+func (mr *MockAccountServiceMockRecorder) FetchAccountById(Id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAccountById", reflect.TypeOf((*MockAccountService)(nil).FetchAccountById), Id, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchAccountById", reflect.TypeOf((*MockAccountService)(nil).FetchAccountById), Id)
 }
 
 // FetchAllAccount mocks base method.

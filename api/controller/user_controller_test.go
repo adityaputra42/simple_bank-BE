@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,7 +35,6 @@ func TestCreateUser(t *testing.T) {
 				"password":  password,
 				"full_name": user.FullName,
 				"email":     user.Email,
-				"role":      "member",
 			},
 			buildStubs: func(service *mock.MockUserService) {
 				arg := request.CreateUser{
@@ -48,6 +48,40 @@ func TestCreateUser(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *http.Response) {
 				require.Equal(t, http.StatusCreated, recorder.StatusCode)
 				RequireBodyMatchUser(t, recorder.Body, user)
+			},
+		},
+		{
+			name: "InternalError",
+			body: fiber.Map{
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.FullName,
+				"email":     user.Email,
+			},
+			buildStubs: func(service *mock.MockUserService) {
+
+				service.EXPECT().CreateUser(gomock.Any()).Times(1).Return(response.UserResponse{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, recorder.StatusCode)
+
+			},
+		},
+		{
+			name: "DuplicateUsername",
+			body: fiber.Map{
+				"username":  user.Username,
+				"password":  password,
+				"full_name": user.Username,
+				"email":     user.Email,
+			},
+			buildStubs: func(service *mock.MockUserService) {
+
+				service.EXPECT().CreateUser(gomock.Any()).Times(1).Return(response.UserResponse{}, sql.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, recorder *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, recorder.StatusCode)
+
 			},
 		},
 	}
@@ -85,6 +119,7 @@ func randomUser() (user response.UserResponse, password string) {
 	password = helper.RandomString(6)
 
 	user = response.UserResponse{
+		ID:       helper.RandomInt(1, 1000),
 		Username: helper.RandomOwner(),
 		FullName: helper.RandomOwner(),
 		Email:    helper.RandomEmail(),
