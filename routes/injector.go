@@ -11,9 +11,16 @@ import (
 	"github.com/google/wire"
 )
 
+var SessionSet = wire.NewSet(
+	repository.NewSessionRepository,
+	service.NewSessionService,
+	controller.NewSessionController,
+)
+
 var UserSet = wire.NewSet(
 	repository.NewUserRepository,
 	repository.NewAccountRepository,
+	repository.NewSessionRepository,
 	service.NewUserService,
 	controller.NewUserController,
 )
@@ -39,6 +46,13 @@ var TransactionSet = wire.NewSet(
 	service.NewTransactionService,
 	controller.NewTransactionController,
 )
+
+func InitializSessionController() controller.SessionController {
+	wire.Build(
+		SessionSet,
+	)
+	return nil
+}
 
 func InitializeUserController() controller.UserController {
 	wire.Build(

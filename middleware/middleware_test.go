@@ -1,11 +1,9 @@
-package controller
+package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"simple_bank_solid/helper"
-	"simple_bank_solid/middleware"
 	"simple_bank_solid/token"
 
 	"testing"
@@ -14,21 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/require"
 )
-
-func AddAuthorization(
-	t *testing.T,
-	request *http.Request,
-	tokenMaker token.Maker,
-	authorizationType string,
-	username string,
-	userId int64,
-	duration time.Duration,
-) {
-	token, err := tokenMaker.CreateToken(username, userId, duration)
-	require.NoError(t, err)
-	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
-	request.Header.Set(helper.GetHeaderKey(), authorizationHeader)
-}
 
 func TestAuthMiddleware(t *testing.T) {
 	testCases := []struct {
@@ -90,7 +73,7 @@ func TestAuthMiddleware(t *testing.T) {
 			app := fiber.New()
 
 			// Setup the middleware and route
-			app.Get("/auth", middleware.AuthMiddleware, func(c *fiber.Ctx) error {
+			app.Get("/auth", AuthMiddleware, func(c *fiber.Ctx) error {
 				return c.Status(http.StatusOK).JSON(fiber.Map{})
 			})
 

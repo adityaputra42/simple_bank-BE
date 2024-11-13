@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"simple_bank_solid/db/mock"
 	"simple_bank_solid/helper"
+	"simple_bank_solid/middleware"
 	"simple_bank_solid/model/web/request"
 	"simple_bank_solid/token"
 	"testing"
@@ -44,7 +45,8 @@ func TestTransfer(t *testing.T) {
 				"currency":        "IDR",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				AddAuthorization(t, request, tokenMaker, helper.GetTypeBearer(), user1.Username, user1.ID, time.Minute)
+
+				middleware.AddAuthorization(t, request, tokenMaker, helper.GetTypeBearer(), user1.Username, user1.ID, time.Minute)
 			},
 			buildStubs: func(store *mock.MockTransactionService) {
 

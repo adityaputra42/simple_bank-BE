@@ -10,8 +10,11 @@ import (
 	"simple_bank_solid/model/web"
 	"simple_bank_solid/token"
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/require"
 )
 
 func AuthMiddleware(c *fiber.Ctx) error {
@@ -68,4 +71,19 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	c.Locals("CurrentUser", user)
 	return c.Next()
 
+}
+func AddAuthorization(
+	t *testing.T,
+	request *http.Request,
+	tokenMaker token.Maker,
+	authorizationType string,
+	username string,
+	userId int64,
+	duration time.Duration,
+) {
+	token, payload, err := tokenMaker.CreateToken(username, userId, duration)
+	require.NoError(t, err)
+	require.NotEmpty(t, payload)
+	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
+	request.Header.Set(helper.GetHeaderKey(), authorizationHeader)
 }
