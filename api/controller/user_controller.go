@@ -136,8 +136,9 @@ func (u *UserControllerImpl) Login(c *fiber.Ctx) error {
 			Message: "Invalid Message Body",
 		})
 	}
-
-	isLogin, user, err := u.userService.Login(*req)
+	userAgent := c.Get("User-Agent")
+	clientIp := c.IP()
+	isLogin, user, err := u.userService.Login(*req, userAgent, clientIp)
 	if err != nil {
 		return c.Status(500).JSON(web.BaseResponse{
 			Status:  500,

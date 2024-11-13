@@ -15,10 +15,18 @@ import (
 
 // Injectors from injector.go:
 
+func InitializSessionController() controller.SessionController {
+	sessionRepository := repository.NewSessionRepository()
+	sessionService := service.NewSessionService(sessionRepository)
+	sessionController := controller.NewSessionController(sessionService)
+	return sessionController
+}
+
 func InitializeUserController() controller.UserController {
 	accountRepository := repository.NewAccountRepository()
 	userRepository := repository.NewUserRepository()
-	userService := service.NewUserService(accountRepository, userRepository)
+	sessionRepository := repository.NewSessionRepository()
+	userService := service.NewUserService(accountRepository, userRepository, sessionRepository)
 	userController := controller.NewUserController(userService)
 	return userController
 }
@@ -50,7 +58,9 @@ func InitializeTransactionController() controller.TransactionController {
 
 // injector.go:
 
-var UserSet = wire.NewSet(repository.NewUserRepository, repository.NewAccountRepository, service.NewUserService, controller.NewUserController)
+var SessionSet = wire.NewSet(repository.NewSessionRepository, service.NewSessionService, controller.NewSessionController)
+
+var UserSet = wire.NewSet(repository.NewUserRepository, repository.NewAccountRepository, repository.NewSessionRepository, service.NewUserService, controller.NewUserController)
 
 var AccountSet = wire.NewSet(repository.NewAccountRepository, service.NewAccountService, controller.NewAccountController)
 

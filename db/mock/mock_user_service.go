@@ -110,9 +110,9 @@ func (mr *MockUserServiceMockRecorder) FecthUser(username interface{}) *gomock.C
 }
 
 // Login mocks base method.
-func (m *MockUserService) Login(req request.LoginUser) (bool, response.LoginResponse, error) {
+func (m *MockUserService) Login(req request.LoginUser, userAgent, clientIp string) (bool, response.LoginResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", req)
+	ret := m.ctrl.Call(m, "Login", req, userAgent, clientIp)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(response.LoginResponse)
 	ret2, _ := ret[2].(error)
@@ -120,9 +120,9 @@ func (m *MockUserService) Login(req request.LoginUser) (bool, response.LoginResp
 }
 
 // Login indicates an expected call of Login.
-func (mr *MockUserServiceMockRecorder) Login(req interface{}) *gomock.Call {
+func (mr *MockUserServiceMockRecorder) Login(req, userAgent, clientIp interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserService)(nil).Login), req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserService)(nil).Login), req, userAgent, clientIp)
 }
 
 // UpdatePassword mocks base method.

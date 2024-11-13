@@ -4,21 +4,22 @@ import (
 	"database/sql"
 	"fmt"
 	"simple_bank_solid/api/repository"
+	"simple_bank_solid/config"
 	"simple_bank_solid/db"
 	"simple_bank_solid/helper"
 	"simple_bank_solid/model/domain"
 	"simple_bank_solid/model/web/request"
 	"simple_bank_solid/model/web/response"
 	"simple_bank_solid/token"
-	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type UserService interface {
 	CreateUser(req request.CreateUser) (response.UserResponse, error)
 	CreateAdmin(req request.CreateUser) (response.UserResponse, error)
-	Login(req request.LoginUser) (bool, response.LoginResponse, error)
+	Login(req request.LoginUser, userAgent, clientIp string) (bool, response.LoginResponse, error)
 	UpdatePassword(req request.UpdateUser, username string) (response.UserResponse, error)
 	Delete(username string) error
 	FecthUser(username string) (response.UserResponse, error)
@@ -28,8 +29,10 @@ type UserService interface {
 type UserServiceImpl struct {
 	accountRepo repository.AccountRepository
 	userRepo    repository.UserRepository
+	sessionRepo repository.SessionRepository
 	db          *gorm.DB
 	tokenMaker  token.Maker
+	config      config.Configuration
 }
 
 // FecthAllUser implements UserService.
@@ -155,7 +158,7 @@ func (u *UserServiceImpl) FecthUser(username string) (response.UserResponse, err
 }
 
 // Login implements UserService.
-func (u *UserServiceImpl) Login(req request.LoginUser) (bool, response.LoginResponse, error) {
+func (u *UserServiceImpl) Login(req request.LoginUser, userAgent, clientIp string) (bool, response.LoginResponse, error) {
 
 	user, err := u.userRepo.FindByUsername(req.Username)
 	if err == sql.ErrNoRows {
@@ -171,12 +174,46 @@ func (u *UserServiceImpl) Login(req request.LoginUser) (bool, response.LoginResp
 		return false, response.LoginResponse{}, fmt.Errorf("hash and password doesn't match")
 	}
 
-	accessToken, err := u.tokenMaker.CreateToken(user.Username, user.ID, time.Minute*15)
+	accessToken, accessPayload, err := u.tokenMaker.CreateToken(user.Username, user.ID, u.config.AccessTokenDuration)
 
 	if err != nil {
 		return false, response.LoginResponse{}, err
 	}
-	return true, response.LoginResponse{AccessToken: accessToken, User: helper.ToUserResponse(user)}, nil
+
+	refreshToken, refreshPayload, err := u.tokenMaker.CreateToken(user.Username, user.ID, u.config.RefreshTokenDuration)
+
+	if err != nil {
+		return false, response.LoginResponse{}, err
+	}
+
+	session := domain.UserSessions{
+		ID:           refreshPayload.ID.String(),
+		RefreshToken: refreshToken,
+		UserId:       user.ID,
+		UserAgent:    "",
+		ClientIp:     "",
+		IsBlocked:    false,
+		ExpiredAt:    refreshPayload.ExpiredAt,
+	}
+	sessionData, err := u.sessionRepo.Create(session)
+
+	if err != nil {
+		return false, response.LoginResponse{}, err
+	}
+	sessionId, err := uuid.Parse(sessionData.ID)
+
+	if err != nil {
+		return false, response.LoginResponse{}, err
+	}
+
+	return true, response.LoginResponse{
+		SessionId:             sessionId,
+		AccessToken:           accessToken,
+		AccessTokenExpiredAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiredAt: refreshPayload.ExpiredAt,
+		User:                  helper.ToUserResponse(user),
+	}, nil
 }
 
 // UpdatePassword implements UserService.
@@ -199,10 +236,13 @@ func (u *UserServiceImpl) UpdatePassword(req request.UpdateUser, username string
 
 }
 
-func NewUserService(AccountRepo repository.AccountRepository, UserRepo repository.UserRepository) UserService {
+func NewUserService(AccountRepo repository.AccountRepository, UserRepo repository.UserRepository, SessionRepo repository.SessionRepository) UserService {
 	con := db.GetConnection()
 	maker := token.GetTokenMaker()
+	conf := config.GetCofig()
 	return &UserServiceImpl{
+		sessionRepo: SessionRepo,
+		config:      conf,
 		accountRepo: AccountRepo,
 		userRepo:    UserRepo,
 		db:          con,

@@ -27,11 +27,13 @@ func RouteInit(app *fiber.App) {
 	userController := InitializeUserController()
 	depositController := InitializeDepositController()
 	transactionController := InitializeTransactionController()
+	sessionController := InitializSessionController()
 	api := app.Group("/api/v1")
 	{
 		api.Post("/register", userController.CreateUser)
 		api.Post("/login", userController.Login)
 		api.Post("/admin/register", userController.CreateAdmin)
+		api.Post("/token/renew_token", sessionController.RenewAccessToken)
 	}
 
 	api_user := api.Group("/users").Use(middleware.AuthMiddleware, role.MemberAuth)

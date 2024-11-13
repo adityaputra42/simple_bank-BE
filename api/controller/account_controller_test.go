@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"simple_bank_solid/db/mock"
 	"simple_bank_solid/helper"
+	"simple_bank_solid/middleware"
 	"simple_bank_solid/model/domain"
 	"simple_bank_solid/token"
 	"testing"
@@ -34,7 +35,7 @@ func TestGetAccount(t *testing.T) {
 			name:      "Ok",
 			accountID: account.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				AddAuthorization(t, request, tokenMaker, helper.GetTypeBearer(), user.Username, user.ID, time.Minute)
+				middleware.AddAuthorization(t, request, tokenMaker, helper.GetTypeBearer(), user.Username, user.ID, time.Minute)
 			},
 			buildStubs: func(store *mock.MockAccountService) {
 				store.EXPECT().FetchAccountById(gomock.Eq(account.ID)).Return(helper.ToAccountResponse(account), sql.ErrConnDone)
