@@ -10,6 +10,12 @@ migratedown:
 migratedown1:
 	migrate -database "mysql://root:root@tcp(127.0.0.1:3306)/simple_bank" -path db/migrations -verbose down 1
 
+dbdocs:
+	dbdocs build doc/db.dbml
+
+dbschema:
+	dbml2sql --mysql -o doc/schema.sql doc/db.dbml
+
 server:
 	go run main.go
 
@@ -21,4 +27,4 @@ proto:
 
 
 
-.PHONY: migrateup migratedown migrateup1 migratedown1 server proto
+.PHONY: migrateup migratedown migrateup1 migratedown1 dbdocs dbschema server proto
