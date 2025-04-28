@@ -15,7 +15,7 @@ func InitServer(config config.Configuration) error {
 	if err != nil {
 		return err
 	}
-
+ 
 	app := fiber.New()
 	RouteInit(app)
 	return app.Listen(config.ServerAddress)
